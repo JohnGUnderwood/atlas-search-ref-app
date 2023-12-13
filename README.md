@@ -22,7 +22,10 @@ node create-search-indexes.mjs
 
 ## Run the app
 ```
-npm run
+npm run dev
 ```
+
+## Modify Search Pipeline
+Now you can play around with modifying the [aggregation pipeline](pages/index.js#L158) with different search options. If you run the app using the `dev` option then changes to the page source code will automatically cause the app to reload reflecting the new code.
 
 

@@ -10,6 +10,7 @@ import Button from '@leafygreen-ui/button';
 const descriptionField = "plot";
 const titleField = "title";
 const imageField = "poster";
+const vectorField = "plot_embedding";
 
 export default function Home(){
   const [query, setQuery] = useState(null);
@@ -126,14 +127,14 @@ async function vectorSearch(query) {
       $vectorSearch:{
         index: "vectorIndex",
         queryVector: embeddingResp.data,
-        path:"plot_embedding",
+        path:`${vectorField}`,
         numCandidates:50,
         limit:10
       }
     },
     {
       $project:{
-          name:`$${titleField}`,
+          title:`$${titleField}`,
           image:`$${imageField}`,
           description:`$${descriptionField}`,
           score:{$meta:"searchScore"},

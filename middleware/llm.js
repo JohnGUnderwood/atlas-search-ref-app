@@ -5,7 +5,7 @@ import { createRouter } from 'next-connect';
 async function openai(){
     try{
         const key = process.env.OPENAI_API_KEY;
-        const openai = new OpenAI({apiKey:key,dangerouslyAllowBrowser: true});
+        const openai = new OpenAI({apiKey:key});
         return openai;
     }catch(error){
         console.log(`Connection failed ${error}`)

@@ -65,7 +65,7 @@ export default function Home(){
                         {/* {r.description} */}
                         {r.highlights?.length > 0
                           ?
-                          <span dangerouslySetInnerHTML={createHighlighting(r.highlights,"fullplot",r.description)} />
+                          <span dangerouslySetInnerHTML={createHighlighting(r.highlights,"plot",r.description)} />
                           : 
                           r.description
                         }
@@ -119,9 +119,9 @@ async function vectorSearch(query) {
   const pipeline = [
     {
       $vectorSearch:{
-        index: "default",
+        index: "vectorIndex",
         queryVector: embeddingResp.data,
-        path:"fullplot_embedding",
+        path:"plot_embedding",
         numCandidates:50,
         limit:10
       }
@@ -130,7 +130,7 @@ async function vectorSearch(query) {
       $project:{
           name:"$title",
           image:"$poster",
-          description:"$fullplot",
+          description:"$plot",
           score:{$meta:"searchScore"},
       }
     }
@@ -156,35 +156,22 @@ async function getInstantResults(query) {
       // {
       //   $match: { "title" : query }
       // },
-      // {
-      //   $search:{
-      //     text:{
-      //         query:query,
-      //         path:{wildcard:"*"}
-      //     }
-      //   }
-      // },
-      // {
-      //   $search:{
-      //     autocomplete:{
-      //         query:query,
-      //         path:"title"
-      //     }
-      //   }
-      // },
-      // {
-      //   $search:{
-      //     text:{
-      //         query:query,
-      //         path:{wildcard:"*"}
-      //     },
-      //     highlight:{
-      //       path:"fullplot"
-      //     }
-      //   }
-      // },
       {
         $search:{
+          index:"searchIndex",
+          // text:{
+          //       query:query,
+          //       path:{wildcard:"*"}
+          //   }
+          // }
+          // autocomplete:{
+          //       query:query,
+          //       path:"title"
+          //   }
+          // }
+          // highlight:{
+          //   path:"plot"
+          // }
           compound:{
             should:[
               {
@@ -204,9 +191,6 @@ async function getInstantResults(query) {
                 }
               }
             ]
-          },
-          highlight:{
-            path:"fullplot"
           }
         }
       },
@@ -217,7 +201,7 @@ async function getInstantResults(query) {
           $project:{
               name:"$title",
               image:"$poster",
-              description:"$fullplot",
+              description:"$plot",
               highlights: { $meta: "searchHighlights" },
               score:{$meta:"searchScore"},
           }

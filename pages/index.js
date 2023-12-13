@@ -6,6 +6,11 @@ import { Subtitle, Description, } from '@leafygreen-ui/typography';
 import Card from '@leafygreen-ui/card';
 import Button from '@leafygreen-ui/button';
 
+// schema variables
+const descriptionField = "plot";
+const titleField = "title";
+const imageField = "poster";
+
 export default function Home(){
   const [query, setQuery] = useState(null);
   const [instantResults, setInstantResults] = useState(null);
@@ -56,8 +61,8 @@ export default function Home(){
             {instantResults.map(r => (
               <SearchResult key={r._id}>
                 <Card>
-                    <Subtitle key={`${r._id}name`} style={{paddingBottom:"5px"}}>
-                      {r.name}
+                    <Subtitle key={`${r._id}title`} style={{paddingBottom:"5px"}}>
+                      {r.title}
                     </Subtitle>
                     <div style={{display:"grid",gridTemplateColumns:"60px 90%",gap:"5px",alignItems:"start"}}>
                       <img src={r.image} style={{maxHeight:"75px"}}/>
@@ -65,7 +70,7 @@ export default function Home(){
                         {/* {r.description} */}
                         {r.highlights?.length > 0
                           ?
-                          <span dangerouslySetInnerHTML={createHighlighting(r.highlights,"plot",r.description)} />
+                          <span dangerouslySetInnerHTML={createHighlighting(r.highlights,descriptionField,r.description)} />
                           : 
                           r.description
                         }
@@ -128,9 +133,9 @@ async function vectorSearch(query) {
     },
     {
       $project:{
-          name:"$title",
-          image:"$poster",
-          description:"$plot",
+          name:`$${titleField}`,
+          image:`$${imageField}`,
+          description:`$${descriptionField}`,
           score:{$meta:"searchScore"},
       }
     }
@@ -154,7 +159,7 @@ async function getInstantResults(query) {
       //   $match:{ $expr : { $eq: [ '$_id' , { $toObjectId: query } ] } }
       // },
       // {
-      //   $match: { "title" : query }
+      //   $match: { `${titleField}` : query }
       // },
       {
         $search:{
@@ -166,12 +171,12 @@ async function getInstantResults(query) {
           // }
           // autocomplete:{
           //       query:query,
-          //       path:"title"
+          //       path:`${titleField}`
           //   }
           // }
-          // highlight:{
-          //   path:"plot"
-          // }
+          highlight:{
+            path:`${descriptionField}`
+          },
           compound:{
             should:[
               {
@@ -187,7 +192,7 @@ async function getInstantResults(query) {
               {
                 autocomplete:{
                     query:query,
-                    path:"title"
+                    path:`${titleField}`
                 }
               }
             ]
@@ -199,11 +204,11 @@ async function getInstantResults(query) {
       },
       {
           $project:{
-              name:"$title",
-              image:"$poster",
-              description:"$plot",
-              highlights: { $meta: "searchHighlights" },
-              score:{$meta:"searchScore"},
+            title:`$${titleField}`,
+            image:`$${imageField}`,
+            description:`$${descriptionField}`,
+            highlights: { $meta: "searchHighlights" },
+            score:{$meta:"searchScore"},
           }
       }
   ]

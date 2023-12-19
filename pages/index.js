@@ -2,7 +2,7 @@ import axios from 'axios';
 import Header from '../components/head';
 import {SearchInput, SearchResult} from '@leafygreen-ui/search-input';
 import { useState, } from 'react';
-import { Subtitle, Description, } from '@leafygreen-ui/typography';
+import { H1, Subtitle, Description, } from '@leafygreen-ui/typography';
 import Card from '@leafygreen-ui/card';
 import Button from '@leafygreen-ui/button';
 
@@ -11,6 +11,7 @@ const descriptionField = "plot";
 const titleField = "title";
 const imageField = "poster";
 const vectorField = "plot_embedding";
+const facetField = "genres";
 
 export default function Home(){
   const [query, setQuery] = useState(null);
@@ -48,8 +49,20 @@ export default function Home(){
     <>
     <Header/>
     <div style={{display:"grid",gridTemplateColumns:"10% 80% 10%",gap:"0px",alignItems:"start"}}>
-      <div></div>
+      <div style={{paddingTop:"225px"}}>
+      {instantResults && instantResults[0].facets && instantResults[0].facets.facet
+        ? 
+        <Card>
+          <Subtitle key={`${facetField}`}>{facetField}</Subtitle>
+              {instantResults[0].facets.facet[`${facetField}`].buckets.map(bucket => (
+                  <Description key={bucket._id} style={{paddingLeft:"15px"}}><span key={`${bucket._id}_label`} style={{cursor:"pointer",paddingRight:"5px", color:"blue"}}>{bucket._id}</span><span key={`${bucket._id}_count`}>({bucket.count})</span></Description>
+              ))}
+        </Card>
+        : <></>
+      }
+      </div>
       <div>
+        <H1 style={{paddingLeft:"30%",paddingTop:"100px"}}>Movie Search</H1>
         <div style={{display:"grid",gridTemplateColumns:"75% 60px 60px",gap:"10px",alignItems:"start", paddingLeft:"16px"}}>
           <div><SearchInput onChange={handleQueryChange} aria-label="some label" style={{marginBottom:"20px"}}></SearchInput></div>
           <div><Button onClick={()=>handleSearch()} variant="primary">Search</Button></div>
@@ -68,7 +81,6 @@ export default function Home(){
                     <div style={{display:"grid",gridTemplateColumns:"60px 90%",gap:"5px",alignItems:"start"}}>
                       <img src={r.image} style={{maxHeight:"75px"}}/>
                       <Description key={`${r._id}desc`}>
-                        {/* {r.description} */}
                         {r.highlights?.length > 0
                           ?
                           <span dangerouslySetInnerHTML={createHighlighting(r.highlights,descriptionField,r.description)} />
@@ -156,50 +168,80 @@ async function vectorSearch(query) {
 
 async function getInstantResults(query) {
   const pipeline = [
-      // {
-      //   $match:{ $expr : { $eq: [ '$_id' , { $toObjectId: query } ] } }
-      // },
+      {
+        $match:{ $expr : { $eq: [ '$_id' , { $toObjectId: query } ] } }
+      },
       // {
       //   $match: { `${titleField}` : query }
       // },
-      {
-        $search:{
-          index:"searchIndex",
-          // text:{
-          //       query:query,
-          //       path:{wildcard:"*"}
-          //   }
-          // }
-          // autocomplete:{
-          //       query:query,
-          //       path:`${titleField}`
-          //   }
-          // }
-          highlight:{
-            path:`${descriptionField}`
-          },
-          compound:{
-            should:[
-              {
-                text:{
-                  query:query,
-                  path:{wildcard:"*"},
-                  // fuzzy:{
-                  //   maxEdits:1,
-                  //   maxExpansions:10
-                  // }
-                }
-              },
-              {
-                autocomplete:{
-                    query:query,
-                    path:`${titleField}`
-                }
-              }
-            ]
-          }
-        }
-      },
+      // {
+      //   $search:{
+      //     index:"searchIndex",
+      //     // text:{
+      //     //       query:query,
+      //     //       path:{wildcard:"*"}
+      //     //   }
+      //     // }
+      //     // autocomplete:{
+      //     //       query:query,
+      //     //       path:`${titleField}`
+      //     //   }
+      //     // }
+      //     // highlight:{
+      //     //   path:`${descriptionField}`
+      //     // },
+      //     // compound:{
+      //     //   should:[
+      //     //     {
+      //     //       text:{
+      //     //         query:query,
+      //     //         path:{wildcard:"*"},
+      //     //         // fuzzy:{
+      //     //         //   maxEdits:1,
+      //     //         //   maxExpansions:10
+      //     //         // }
+      //     //       }
+      //     //     },
+      //     //     {
+      //     //       autocomplete:{
+      //     //           query:query,
+      //     //           path:`${titleField}`
+      //     //       }
+      //     //     }
+      //     //   ]
+      //     // },
+      //     // facet:{
+      //     //   operator:{
+      //     //     compound:{
+      //     //       should:[
+      //     //         {
+      //     //           text:{
+      //     //             query:query,
+      //     //             path:{wildcard:"*"},
+      //     //             // fuzzy:{
+      //     //             //   maxEdits:1,
+      //     //             //   maxExpansions:10
+      //     //             // }
+      //     //           }
+      //     //         },
+      //     //         {
+      //     //           autocomplete:{
+      //     //               query:query,
+      //     //               path:`${titleField}`
+      //     //           }
+      //     //         }
+      //     //       ]
+      //     //     }
+      //     //   },
+      //     //   facets:{
+      //     //     genres:{
+      //     //       type:"string",
+      //     //       path:`${facetField}`
+      //     //     }
+      //     //   }
+      //     // }
+      //   }
+      // },
       {
           $limit:10
       },
@@ -210,6 +252,7 @@ async function getInstantResults(query) {
             description:`$${descriptionField}`,
             highlights: { $meta: "searchHighlights" },
             score:{$meta:"searchScore"},
+            // facets:"$$SEARCH_META"
           }
       }
   ]

@@ -18,6 +18,14 @@ const searchIndex = {
           {
             "type": "autocomplete"
           }
+        ],
+        "genres":[
+          {
+            "type":"stringFacet"
+          },
+          {
+            "type":"token"
+          }
         ]
       }
     }

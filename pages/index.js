@@ -50,7 +50,7 @@ export default function Home(){
     <Header/>
     <div style={{display:"grid",gridTemplateColumns:"10% 80% 10%",gap:"0px",alignItems:"start"}}>
       <div style={{paddingTop:"225px"}}>
-      {instantResults && instantResults[0].facets && instantResults[0].facets.facet
+      {instantResults && instantResults[0] && instantResults[0].facets && instantResults[0].facets.facet
         ? 
         <Card>
           <Subtitle key={`${facetField}`}>{facetField}</Subtitle>
@@ -66,7 +66,7 @@ export default function Home(){
         <div style={{display:"grid",gridTemplateColumns:"75% 60px 60px",gap:"10px",alignItems:"start", paddingLeft:"16px"}}>
           <div><SearchInput onChange={handleQueryChange} aria-label="some label" style={{marginBottom:"20px"}}></SearchInput></div>
           <div><Button onClick={()=>handleSearch()} variant="primary">Search</Button></div>
-          <div><Button onClick={()=>handleVectorSearch()} variant="primary">Vector</Button></div>
+          {/* <div><Button onClick={()=>handleVectorSearch()} variant="primary">Vector</Button></div> */}
         </div>
         {
           instantResults && instantResults.length > 0
@@ -172,7 +172,7 @@ async function getInstantResults(query) {
         $match:{ $expr : { $eq: [ '$_id' , { $toObjectId: query } ] } }
       },
       // {
-      //   $match: { `${titleField}` : query }
+      //   $match: { title : query }
       // },
       // {
       //   $search:{
@@ -180,13 +180,11 @@ async function getInstantResults(query) {
       //     // text:{
       //     //       query:query,
       //     //       path:{wildcard:"*"}
-      //     //   }
-      //     // }
+      //     //   },
       //     // autocomplete:{
       //     //       query:query,
       //     //       path:`${titleField}`
-      //     //   }
-      //     // }
+      //     //   },
       //     // highlight:{
       //     //   path:`${descriptionField}`
       //     // },
@@ -240,7 +238,7 @@ async function getInstantResults(query) {
       //     //     }
       //     //   }
       //     // }
-      //   }
+      //   },
       // },
       {
           $limit:10

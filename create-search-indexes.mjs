@@ -35,8 +35,8 @@ const searchIndex = {
 
 const vectorIndex = {
   name: "vectorIndex",
+  type: "vectorSearch",
   definition: {
-    "type": "vectorSearch",
     "fields": [
       {
         "type": "vector",
@@ -50,12 +50,12 @@ const vectorIndex = {
 
 console.log("Connection string: ", process.env.MDB_URI);
 console.log("Database: ", process.env.MDB_DB);
-console.log("Collection: ", process.env.MDB_Coll);
+console.log("Collection: ", process.env.MDB_COLL);
 
 try{
   const client = new MongoClient(process.env.MDB_URI);
+  await client.connect();
   try{
-      await client.connect();
       try{
         const db = client.db(process.env.MDB_DB);
         const collection = db.collection(process.env.MDB_COLL);
@@ -63,7 +63,7 @@ try{
         await collection.createSearchIndex(vectorIndex);
         console.log(collection.listSearchIndexes());
       }catch(error){
-        console.log(`Connection failed ${error}`);
+        console.log(`Creating indexes failed ${error}`);
         throw error;
       }finally{
         client.close();

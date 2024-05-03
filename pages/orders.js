@@ -77,17 +77,16 @@ export default function Home(){
                     <Subtitle key={`${r._id}title`} style={{paddingBottom:"5px"}}>
                       {r.title}
                     </Subtitle>
-                    <div style={{display:"grid",gridTemplateColumns:"60px 90%",gap:"5px",alignItems:"start"}}>
-                      <img src={r.image} style={{maxHeight:"75px"}}/>
-                      <Description key={`${r._id}desc`}>
-                        {r.highlights?.length > 0
-                          ?
-                          <span dangerouslySetInnerHTML={createHighlighting(r.highlights,descriptionField,r.description)} />
-                          : 
-                          r.description
-                        }
-                      </Description>
-                    </div>
+                    <Description key={`${r._id}desc`}>
+                      {r.highlights?.length > 0
+                        ?
+                        r.description.map((v,i) => (
+                          <span key={`desc_v_${i}`} dangerouslySetInnerHTML={createHighlighting(r.highlights,descriptionField,v)} />
+                        ))
+                        : 
+                        r.description
+                      }
+                    </Description>
                 </Card>
               </SearchResult>
             ))}
@@ -170,6 +169,9 @@ async function getInstantResults(query) {
       {
         $search:{
           index:"searchIndex2",
+          highlight:{
+            path:`${descriptionField}`
+          },
           facet:{
             operator:{
               compound:{
@@ -216,7 +218,8 @@ async function getInstantResults(query) {
             image:`$${imageField}`,
             description:`$${descriptionField}`,
             score:{$meta:"searchScore"},
-            facets:"$$SEARCH_META"
+            facets:"$$SEARCH_META",
+            highlights: { $meta: "searchHighlights" }
           }
       }
   ]

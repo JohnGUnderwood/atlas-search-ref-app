@@ -79,8 +79,8 @@ export default function Home(){
                       {r.title}
                     </Subtitle>
                     <div style={{display:"grid",gridTemplateColumns:"60px 90%",gap:"5px",alignItems:"start"}}>
-                      <img src={r.image} style={{maxHeight:"75px"}}/>
-                      <Description key={`${r._id}desc`}>
+                      <img src={r.image} style={{maxHeight:"75px",maxWidth:"90px"}}/>
+                      <Description key={`${r._id}desc`} style={{paddingLeft:"50px"}}>
                         {r.highlights?.length > 0
                           ?
                           <span dangerouslySetInnerHTML={createHighlighting(r.highlights,descriptionField,r.description)} />
@@ -252,7 +252,7 @@ async function getInstantResults(query) {
             description:`$${descriptionField}`,
             highlights: { $meta: "searchHighlights" },
             score:{$meta:"searchScore"},
-            facets:"$$SEARCH_META"
+            // facets:"$$SEARCH_META"
           }
       }
   ]

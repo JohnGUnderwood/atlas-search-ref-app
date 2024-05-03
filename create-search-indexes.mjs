@@ -52,6 +52,17 @@ const searchIndex2 = {
               ]
             },
             "type": "embeddedDocuments"
+          },
+          {
+            "dynamic": false,
+            "fields": {
+              "title": [
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "document"
           }
         ],
         "payment_method": [

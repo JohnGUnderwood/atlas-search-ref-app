@@ -68,6 +68,9 @@ const searchIndex2 = {
         "payment_method": [
           {
             "type": "stringFacet"
+          },
+          {
+            "type":"token"
           }
         ]
       }

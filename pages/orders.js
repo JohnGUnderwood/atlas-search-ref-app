@@ -1,10 +1,12 @@
 import axios from 'axios';
 import Header from '../components/head';
 import {SearchInput, SearchResult} from '@leafygreen-ui/search-input';
-import { useState, } from 'react';
+import { useState, useEffect} from 'react';
 import { H1, Subtitle, Description, } from '@leafygreen-ui/typography';
 import Card from '@leafygreen-ui/card';
 import Button from '@leafygreen-ui/button';
+import Facets from '../components/search/facets';
+import Filters from '../components/search/filters';
 
 // schema variables
 const descriptionField = "order_lines.title";
@@ -13,7 +15,7 @@ const imageField = "imgUrl";
 const facetField = "payment_method";
 
 export default function Home(){
-  const [query, setQuery] = useState(null);
+  const [query, setQuery] = useState({terms:'',filters:{}});
   const [instantResults, setInstantResults] = useState(null);
 
   const handleSearch = () => {
@@ -26,23 +28,43 @@ export default function Home(){
     }
   }
 
-  const handleVectorSearch = () => {
-    if(query && query != ""){
-      vectorSearch(query)
-      .then(resp => setInstantResults(resp.data.results))
-      .catch(error => console.log(error));
-    }else{
-      setQuery(null);
-    }
+  const handleAddFilter = (filter,val) => {
+    let copiedFilters = {...query.filters};
+    copiedFilters[filter] = val;
+    setQuery(prevQuery => ({...prevQuery, filters: copiedFilters}));
+  };
+
+  const handleRemoveFilter = (field) => {
+    let copiedFilters = {...query.filters};
+    delete copiedFilters[field]
+    setQuery(prevQuery => ({...prevQuery, filters: copiedFilters}));
   }
 
   const handleQueryChange = (event) => {
     setInstantResults(null);
-    setQuery(event.target.value);
-    getInstantResults(event.target.value)
-    .then(resp => setInstantResults(resp.data.results))
-    .catch(error => console.log(error));
+    // let copiedQuery = {...query};
+    // copiedQuery.terms = event.target.value;
+    // setQuery(copiedQuery);
+    setQuery(prevQuery => ({...prevQuery,terms:event.target.value}));
   };
+
+  useEffect(() => {
+    getInstantResults(query)
+        .then(resp => setInstantResults(resp.data.results))
+        .catch(error => console.log(error));
+  },[query.filters]);
+
+  useEffect(() => {
+    if(query.terms && query.terms != ''){
+      getInstantResults(query)
+        .then(resp => setInstantResults(resp.data.results))
+        .catch(error => console.log(error));
+    }else if(query.terms == ''){
+      setInstantResults(null);
+    }
+  },[query.terms]);
+
+  
 
   return (
     <>
@@ -51,12 +73,13 @@ export default function Home(){
       <div style={{paddingTop:"225px"}}>
       {instantResults && instantResults[0] && instantResults[0].facets && instantResults[0].facets.facet
         ? 
-        <Card>
-          <Subtitle key={`${facetField}`}>{facetField}</Subtitle>
-              {instantResults[0].facets.facet[`${facetField}`].buckets.map(bucket => (
-                  <Description key={bucket._id} style={{paddingLeft:"15px"}}><span key={`${bucket._id}_label`} style={{cursor:"pointer",paddingRight:"5px", color:"blue"}}>{bucket._id}</span><span key={`${bucket._id}_count`}>({bucket.count})</span></Description>
-              ))}
-        </Card>
+        // <Card>
+        //   <Subtitle key={`${facetField}`}>{facetField}</Subtitle>
+        //       {instantResults[0].facets.facet[`${facetField}`].buckets.map(bucket => (
+        //           <Description key={bucket._id} style={{paddingLeft:"15px"}}><span key={`${bucket._id}_label`} style={{cursor:"pointer",paddingRight:"5px", color:"blue"}}>{bucket._id}</span><span key={`${bucket._id}_count`}>({bucket.count})</span></Description>
+        //       ))}
+        // </Card>
+        <Facets facets={instantResults[0].facets.facet} onFilterChange={handleAddFilter}/>
         : <></>
       }
       </div>
@@ -71,6 +94,7 @@ export default function Home(){
           instantResults && instantResults.length > 0
           ?
           <div style={{maxWidth:"95%"}}>
+            {query.filters? Object.keys(query.filters).length > 0 ? <Filters filters={query.filters} handleRemoveFilter={handleRemoveFilter}/> :<></>:<></>}
             {instantResults.map(r => (
               <SearchResult key={r._id}>
                 <Card>
@@ -165,7 +189,8 @@ async function vectorSearch(query) {
 }
 
 async function getInstantResults(query) {
-  const pipeline = [
+  console.log(query)
+  const searchStage =
       {
         $search:{
           index:"searchIndex2",
@@ -175,26 +200,28 @@ async function getInstantResults(query) {
           facet:{
             operator:{
               compound:{
-                should:[
+                must:[
                   {
-                    autocomplete:{
-                        query:query,
-                        path:`${titleField}`
-                    }
-                  },
-                  {
-                    embeddedDocument: {
-                      path:"order_lines",
-                      operator:{
-                        text:{
-                          query:query,
-                          path:`${descriptionField}`,
-                          // fuzzy:{
-                          //   maxEdits:1,
-                          //   maxExpansions:10
-                          // }
+                    compound:{
+                      should:[
+                        {
+                          autocomplete:{
+                              query:query.terms,
+                              path:`${titleField}`
+                          }
+                        },
+                        {
+                          embeddedDocument: {
+                            path:"order_lines",
+                            operator:{
+                              text:{
+                                query:query.terms,
+                                path:`${descriptionField}`,
+                              }
+                            }
+                          }
                         }
-                      }
+                      ]
                     }
                   }
                 ]
@@ -208,7 +235,19 @@ async function getInstantResults(query) {
             }
           }
         },
-      },
+      }
+  if(query.filters && Object.keys(query.filters).length > 0) {
+    searchStage.$search.facet.operator.compound.filter = Object.entries(query.filters).map(([field,val]) => { 
+      return {
+        equals:{
+          path:field,
+          value:val.val
+        }
+      }
+    });
+  };
+  const pipeline = [
+      searchStage,
       {
           $limit:10
       },

@@ -5,6 +5,7 @@ import { useState, } from 'react';
 import { H1, Subtitle, Description, } from '@leafygreen-ui/typography';
 import Card from '@leafygreen-ui/card';
 import Button from '@leafygreen-ui/button';
+import Link from 'next/link';
 
 // schema variables
 const descriptionField = "title";
@@ -66,7 +67,7 @@ export default function Home(){
         <div style={{display:"grid",gridTemplateColumns:"75% 60px 60px",gap:"10px",alignItems:"start", paddingLeft:"16px"}}>
           <div><SearchInput onChange={handleQueryChange} aria-label="some label" style={{marginBottom:"20px"}}></SearchInput></div>
           <div><Button onClick={()=>handleSearch()} variant="primary">Search</Button></div>
-          <div><Button onClick={()=>handleVectorSearch()} variant="primary">Vector</Button></div>
+          {/* <div><Button onClick={()=>handleVectorSearch()} variant="primary">Vector</Button></div> */}
         </div>
         {
           instantResults && instantResults.length > 0
@@ -76,7 +77,9 @@ export default function Home(){
               <SearchResult key={r._id}>
                 <Card>
                     <Subtitle key={`${r._id}title`} style={{paddingBottom:"5px"}}>
-                      {r.title}
+                      <Link href={`/product?product_id=${r._id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {r.title}
+                      </Link>
                     </Subtitle>
                     <div style={{display:"grid",gridTemplateColumns:"60px 90%",gap:"5px",alignItems:"start"}}>
                       <img src={r.image} style={{maxHeight:"75px",maxWidth:"90px"}}/>

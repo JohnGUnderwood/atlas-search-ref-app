@@ -14,7 +14,7 @@ const titleField = "customer_email";
 const imageField = "imgUrl";
 const facetField = "payment_method";
 
-export default function Home(){
+export default function Orders(){
   const [query, setQuery] = useState({terms:'',filters:{}});
   const [instantResults, setInstantResults] = useState(null);
 
